@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from nptyping import NDArray
 import plotly.express as px
+from scipy.signal import find_peaks, peak_widths
 
 # plotting config
 sns.set(style="darkgrid", font_scale=1.5)
@@ -61,17 +62,21 @@ def get_lower_rolling_mean(data: NDArray, window_size: int = 11, k_percent: floa
     return lower_mean_arr
 
 
-def plot_2D(df: pd.DataFrame):
-    """
-    Plot smoothed data.
+def plot_2D(df: pd.DataFrame, show_peaks: bool=True,
+            peak_prominence: float=0.02,
+            peak_abs_height: float=0.02,
+            peak_rel_height: float=0.5):
+    for cell_id, group_df in df.groupby('cell_id'):
+        plt.plot(group_df['frame'], group_df['processed'], label=f'Cell {cell_id}')
+        if show_peaks:
+            data_arr = group_df['processed'].to_numpy()
+            peaks, peak_info = find_peaks(data_arr, height = peak_abs_height, prominence = peak_prominence)
+            widths = peak_widths(data_arr, peaks, rel_height = peak_rel_height)
+            plt.plot(peaks, data_arr[peaks], '.', color="black")
+            plt.hlines(*widths[1:], color="grey", linestyle="--", alpha=0.5)
 
-    :param df: DataFrame containing data to be plotted.
-    :type df: pd.DataFrame
-    :return: None
-    :rtype: None
-    """
-    ax = sns.lineplot(x='frame', y='processed', hue='cell_id', data=df, palette="tab10", legend=False)
-    ax.set(xlabel='Frame', ylabel='∆F/F')
+    plt.xlabel('Frame')
+    plt.ylabel('∆F/F')
     plt.tight_layout()
     plt.show()
 
@@ -134,3 +139,6 @@ def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "t
     df['processed'] = smoothed_vals
 
     return df
+
+df = process_raw_reads(r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001.csv")
+plot_2D(df)

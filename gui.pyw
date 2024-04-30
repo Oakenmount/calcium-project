@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from postprocess import process_raw_reads, plot_2D, plot_3D
 
+
 class ProcessGUI:
     def __init__(self, root):
         self.root = root
@@ -16,6 +17,10 @@ class ProcessGUI:
         self.subtract_bg_var = tk.BooleanVar(root, True)
         self.smoothing_var = tk.IntVar(root, 3)
         self.window_size_var = tk.IntVar(root, 11)
+        self.show_peaks_var = tk.BooleanVar(root, True)
+        self.peak_prominence_var = tk.DoubleVar(root, 0.02)
+        self.peak_abs_height_var = tk.DoubleVar(root, 0.02)
+        self.peak_rel_height_var = tk.DoubleVar(root, 0.5)
 
         # Widgets
         self.quantity_label = tk.Label(root, text="Quantity:")
@@ -42,6 +47,24 @@ class ProcessGUI:
         self.window_size_label.pack()
         self.window_size_entry = tk.Entry(root, textvariable=self.window_size_var)
         self.window_size_entry.pack()
+
+        self.show_peaks_check = tk.Checkbutton(root, text="Show Peaks", variable=self.show_peaks_var)
+        self.show_peaks_check.pack()
+
+        self.peak_prominence_label = tk.Label(root, text="Peak Prominence:")
+        self.peak_prominence_label.pack()
+        self.peak_prominence_entry = tk.Entry(root, textvariable=self.peak_prominence_var)
+        self.peak_prominence_entry.pack()
+
+        self.peak_abs_height_label = tk.Label(root, text="Peak Absolute Height:")
+        self.peak_abs_height_label.pack()
+        self.peak_abs_height_entry = tk.Entry(root, textvariable=self.peak_abs_height_var)
+        self.peak_abs_height_entry.pack()
+
+        self.peak_rel_height_label = tk.Label(root, text="Peak Relative Height:")
+        self.peak_rel_height_label.pack()
+        self.peak_rel_height_entry = tk.Entry(root, textvariable=self.peak_rel_height_var)
+        self.peak_rel_height_entry.pack()
 
         # Buttons
         self.load_button = tk.Button(root, text="Load Data", command=self.load_and_process_data)
@@ -102,7 +125,11 @@ class ProcessGUI:
 
     def plot_2d(self):
         if hasattr(self, 'processed_df'):
-            plot_2D(self.processed_df)
+            plot_2D(self.processed_df,
+                    show_peaks=self.show_peaks_var.get(),
+                    peak_prominence=self.peak_prominence_var.get(),
+                    peak_abs_height=self.peak_abs_height_var.get(),
+                    peak_rel_height=self.peak_rel_height_var.get())
         else:
             messagebox.showerror("Error", "Data not processed.")
 
