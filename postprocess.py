@@ -134,7 +134,3 @@ def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "t
     df['processed'] = smoothed_vals
 
     return df
-
-
-df = process_raw_reads(r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001.csv")
-plot_2D(df)
