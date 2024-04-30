@@ -5,6 +5,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import seaborn as sns
 from nptyping import NDArray
+import plotly.express as px
 
 # plotting config
 sns.set(style="darkgrid", font_scale=1.5)
@@ -43,12 +44,15 @@ def process_raw_reads(fpath: str, bg_path: str = None):
         bg_path = fpath.replace(".csv", "_bg.csv")
     df_bg = pd.read_csv(bg_path)
 
+    smoothed_vals = []
+
     for cell_id, group_df in df.groupby('cell_id'):
         # Subtract values with background
-        data = group_df['mean'].to_numpy()  # - df_bg['mean'].to_numpy()
+        data = group_df['top10'].to_numpy()  # - df_bg['mean'].to_numpy()
         lower = get_lower_rolling_mean(data)
         normed = (data - lower) / lower
         smoothed = smooth_timeseries(normed, 3)
+        smoothed_vals.extend(smoothed)
         plt.plot(group_df['frame'], smoothed, label=f'Cell {cell_id}')
 
     # Add labels and title
@@ -60,5 +64,14 @@ def process_raw_reads(fpath: str, bg_path: str = None):
     # Show plot
     plt.show()
 
+    df['smoothed'] = smoothed_vals
 
-process_raw_reads("data/processed/exp_1/GPN1/GPN1_001.csv")
+    fig = px.line_3d(df, x='frame', y='cell_id', z='smoothed', color='cell_id',
+                     labels={'frame': 'Frame',
+                             'smoothed': '∆F/F',
+                             'cell_id': 'Cell'
+                             })
+    fig.show()
+
+
+process_raw_reads("data/processed/exp_2/GPN1/GPN1_001.csv")
