@@ -40,7 +40,7 @@ def get_lower_rolling_mean(data: NDArray, window_size: int = 11, k_percent: floa
 
 
 def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "top10",
-                      bg_path: str = None, out_file: str = None,
+                      bg_path: str = None, subtract_bg: bool = True, out_file: str = None,
                       show_plot: bool = True, show_3D: bool = False):
     df = pd.read_csv(fpath)
     if bg_path is None:
@@ -51,7 +51,9 @@ def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "t
 
     for cell_id, group_df in df.groupby('cell_id'):
         # Subtract values with background
-        data = group_df[quantity].to_numpy()  # - df_bg['mean'].to_numpy()
+        data = group_df[quantity].to_numpy()
+        if subtract_bg:
+            data -= df_bg['mean'].to_numpy()
         lower = get_lower_rolling_mean(data, window_size=11)
         normed = np.clip((data - lower) / lower, a_min=0, a_max=None)  # Can go below zero at boundaries.
         smoothed = smooth_timeseries(normed, 3)
