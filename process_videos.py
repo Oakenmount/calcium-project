@@ -19,13 +19,15 @@ def get_mask_centroids(mask: NDArray) -> List:
     return coords
 
 
-def process_video(vid_path: str, out_path: str, exists_ok: bool = False):
+def process_video(vid_path: str, out_path: str, mask_path: str = None, exists_ok: bool = False):
+    if mask_path is None:
+        mask_path = vid_path[:-4] + "_cp_masks.png"
+
     # validate args
     if not exists_ok and os.path.exists(out_path):
         raise FileExistsError(f"{out_path} already exists")
     if not vid_path[-4:] == ".nd2":
         raise ValueError(f"{vid_path} is not an nd2 file")
-    mask_path = vid_path[:-4] + "_cp_masks.png"
     if not os.path.exists(mask_path):
         raise FileNotFoundError(f"{mask_path} not found")
     if not out_path[-4:] == ".csv":
@@ -70,11 +72,10 @@ def process_video(vid_path: str, out_path: str, exists_ok: bool = False):
             top10 = frame_masked[idx]
             # cell id, frame, mean signal, max signal, top10 signal
             df_rows.append([i, frame, avg, frame_masked.max(), top10.mean()])
-        if i > 3:
-            break
+
     df = pd.DataFrame(df_rows, columns=["cell_id", "frame", "mean", "max", "top10"])
     df.to_csv(out_path, index=False)
 
 
 if __name__ == "__main__":
-    process_video("data/raw/exp_1/GPN1/GPN1_001.nd2", "data/processed/exp_1/GPN1/GPN1_001.csv", exists_ok=True)
+    process_video("data/raw/exp_2/GPN1/GPN1_001.nd2", "data/processed/exp_2/GPN1/GPN1_001.csv", exists_ok=True)
