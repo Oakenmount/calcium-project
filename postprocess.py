@@ -61,10 +61,41 @@ def get_lower_rolling_mean(data: NDArray, window_size: int = 11, k_percent: floa
     return lower_mean_arr
 
 
+def plot_2D(df: pd.DataFrame):
+    """
+    Plot smoothed data.
+
+    :param df: DataFrame containing data to be plotted.
+    :type df: pd.DataFrame
+    :return: None
+    :rtype: None
+    """
+    ax = sns.lineplot(x='frame', y='processed', hue='cell_id', data=df, palette="tab10", legend=False)
+    ax.set(xlabel='Frame', ylabel='∆F/F')
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_3D(df: pd.DataFrame):
+    """
+    Plot data in 3D.
+
+    :param df: DataFrame containing data to be plotted.
+    :type df: pd.DataFrame
+    :return: None
+    :rtype: None
+    """
+    fig = px.line_3d(df, x='frame', y='cell_id', z='processed', color='cell_id',
+                     labels={'frame': 'Frame',
+                             'processed': '∆F/F',
+                             'cell_id': 'Cell'
+                             })
+    fig.show()
+
+
 def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "top10",
-                      bg_path: str = None, subtract_bg: bool = True, out_file: str = None,
-                      smoothing: int = 3, window_size: int = 11,
-                      show_plot: bool = True, show_3D: bool = False):
+                      bg_path: str = None, subtract_bg: bool = True,
+                      smoothing: int = 3, window_size: int = 11) -> pd.DataFrame:
     """
     Process raw reads from a CSV file, subtracting background and smoothing data.
 
@@ -76,18 +107,12 @@ def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "t
     :type bg_path: str, optional
     :param subtract_bg: Whether to subtract background data.
     :type subtract_bg: bool, optional
-    :param out_file: Path to save the processed data.
-    :type out_file: str, optional
     :param smoothing: The size of the smoothing window.
     :type smoothing: int, optional
     :param window_size: The size of the rolling window for calculating the lower mean.
     :type window_size: int, optional
-    :param show_plot: Whether to display the plot.
-    :type show_plot: bool, optional
-    :param show_3D: Whether to display a 3D plot.
-    :type show_3D: bool, optional
-    :return: None
-    :rtype: None
+    :return: DataFrame containing processed data.
+    :rtype: pd.DataFrame
     """
     df = pd.read_csv(fpath)
     if bg_path is None:
@@ -105,27 +130,11 @@ def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "t
         normed = np.clip((data - lower) / lower, a_min=0, a_max=None)  # Can go below zero at boundaries.
         smoothed = smooth_timeseries(normed, smoothing)
         smoothed_vals.extend(smoothed)
-        plt.plot(group_df['frame'], smoothed, label=f'Cell {cell_id}')
-
-    if show_plot:
-        # Add labels and title
-        plt.xlabel('Frame')
-        plt.ylabel('∆F/F')
-        plt.tight_layout()
-        plt.show()
 
     df['processed'] = smoothed_vals
 
-    if not out_file is None:
-        df.to_csv(out_file, index=False)
-
-    if show_3D:
-        fig = px.line_3d(df, x='frame', y='cell_id', z='processed', color='cell_id',
-                         labels={'frame': 'Frame',
-                                 'processed': '∆F/F',
-                                 'cell_id': 'Cell'
-                                 })
-        fig.show()
+    return df
 
 
-process_raw_reads(r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001.csv", show_3D=True)
+df = process_raw_reads(r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001.csv")
+plot_2D(df)
