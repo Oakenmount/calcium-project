@@ -1,4 +1,5 @@
 from math import floor
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -38,7 +39,9 @@ def get_lower_rolling_mean(data: NDArray, window_size: int = 11, k_percent: floa
     return lower_mean_arr
 
 
-def process_raw_reads(fpath: str, bg_path: str = None):
+def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "top10",
+                      bg_path: str = None, out_file: str = None,
+                      show_plot: bool = True, show_3D: bool = False):
     df = pd.read_csv(fpath)
     if bg_path is None:
         bg_path = fpath.replace(".csv", "_bg.csv")
@@ -48,30 +51,32 @@ def process_raw_reads(fpath: str, bg_path: str = None):
 
     for cell_id, group_df in df.groupby('cell_id'):
         # Subtract values with background
-        data = group_df['top10'].to_numpy()  # - df_bg['mean'].to_numpy()
-        lower = get_lower_rolling_mean(data)
-        normed = (data - lower) / lower
+        data = group_df[quantity].to_numpy()  # - df_bg['mean'].to_numpy()
+        lower = get_lower_rolling_mean(data, window_size=11)
+        normed = np.clip((data - lower) / lower, a_min=0, a_max=None)  # Can go below zero at boundaries.
         smoothed = smooth_timeseries(normed, 3)
         smoothed_vals.extend(smoothed)
         plt.plot(group_df['frame'], smoothed, label=f'Cell {cell_id}')
 
-    # Add labels and title
-    plt.xlabel('Frame')
-    plt.ylabel('∆F/F')
-    plt.legend()
-    plt.grid(True)
-
-    # Show plot
-    plt.show()
+    if show_plot:
+        # Add labels and title
+        plt.xlabel('Frame')
+        plt.ylabel('∆F/F')
+        plt.tight_layout()
+        plt.show()
 
     df['smoothed'] = smoothed_vals
 
-    fig = px.line_3d(df, x='frame', y='cell_id', z='smoothed', color='cell_id',
-                     labels={'frame': 'Frame',
-                             'smoothed': '∆F/F',
-                             'cell_id': 'Cell'
-                             })
-    fig.show()
+    if not out_file is None:
+        df.to_csv(out_file, index=False)
+
+    if show_3D:
+        fig = px.line_3d(df, x='frame', y='cell_id', z='smoothed', color='cell_id',
+                         labels={'frame': 'Frame',
+                                 'smoothed': '∆F/F',
+                                 'cell_id': 'Cell'
+                                 })
+        fig.show()
 
 
 process_raw_reads("data/processed/exp_2/GPN1/GPN1_001.csv")
