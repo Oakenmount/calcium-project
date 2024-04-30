@@ -44,11 +44,14 @@ def process_video(vid_path: str, out_path: str, exists_ok: bool = False):
     coords_df = pd.DataFrame(coords, columns=["cell_id", "x", "y"])
     coords_df.to_csv(out_path.replace(".csv", "_positions.csv"), index=False)
 
-    # calc bg
+    # calc bottom 10% bg
     bg = (mask == 0)
     frame_vals = []
     for i in range(len(vid)):
-        frame_vals.append([i, vid[i, bg].mean()])
+        bg_vals = vid[i, bg]
+        k = int(len(bg_vals) / 10)  # k = top10
+        idx = np.argpartition(bg_vals, k)[:k]
+        frame_vals.append([i, bg_vals[idx].mean()])
     bg_df = pd.DataFrame(frame_vals, columns=["frame", "mean"])
     bg_df.to_csv(out_path.replace(".csv", "_bg.csv"), index=False)
 
