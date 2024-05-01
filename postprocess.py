@@ -1,5 +1,5 @@
 from math import floor
-from typing import Literal
+from typing import Literal, List, Tuple
 
 import numpy as np
 import pandas as pd
@@ -62,16 +62,33 @@ def get_lower_rolling_mean(data: NDArray, window_size: int = 11, k_percent: floa
     return lower_mean_arr
 
 
-def plot_2D(df: pd.DataFrame, show_peaks: bool=True,
-            peak_prominence: float=0.02,
-            peak_abs_height: float=0.02,
-            peak_rel_height: float=0.5):
+def plot_2D(df: pd.DataFrame, show_peaks: bool = True,
+            peak_prominence: float = 0.02,
+            peak_abs_height: float = 0.02,
+            peak_rel_height: float = 0.5):
+    """
+    Show a line plot of ∆F/F per frame for each cell.
+
+    :param df: DataFrame containing 'cell_id' and 'frame' columns, and 'processed' signal intensity.
+    :type df: pd.DataFrame
+    :param show_peaks: Flag to show peaks on the plot, defaults to True.
+    :type show_peaks: bool, optional
+    :param peak_prominence: Minimum prominence of peaks, defaults to 0.02.
+    :type peak_prominence: float, optional
+    :param peak_abs_height: Absolute minimum height of peaks, defaults to 0.02.
+    :type peak_abs_height: float, optional
+    :param peak_rel_height: Relative minimum height of peaks, defaults to 0.5.
+    :type peak_rel_height: float, optional
+
+    :return: None
+    :rtype: None
+    """
     for cell_id, group_df in df.groupby('cell_id'):
         plt.plot(group_df['frame'], group_df['processed'], label=f'Cell {cell_id}')
         if show_peaks:
             data_arr = group_df['processed'].to_numpy()
-            peaks, peak_info = find_peaks(data_arr, height = peak_abs_height, prominence = peak_prominence)
-            widths = peak_widths(data_arr, peaks, rel_height = peak_rel_height)
+            peaks, peak_info = find_peaks(data_arr, height=peak_abs_height, prominence=peak_prominence)
+            widths = peak_widths(data_arr, peaks, rel_height=peak_rel_height)
             plt.plot(peaks, data_arr[peaks], '.', color="black")
             plt.hlines(*widths[1:], color="grey", linestyle="--", alpha=0.5)
 
@@ -80,7 +97,17 @@ def plot_2D(df: pd.DataFrame, show_peaks: bool=True,
     plt.tight_layout()
     plt.show()
 
+
 def plot_image(df: pd.DataFrame):
+    """
+    Plot an image representing ∆F/F for each cell over frames.
+
+    :param df: DataFrame containing 'cell_id', 'frame', and 'processed' columns.
+    :type df: pd.DataFrame
+
+    :return: None
+    :rtype: None
+    """
     # Get unique cell_ids and frames
     cell_ids = df['cell_id'].unique()
     frames = df['frame'].unique()
@@ -102,10 +129,11 @@ def plot_image(df: pd.DataFrame):
     plt.tight_layout()
     plt.show()
 
-def plot_3D(df: pd.DataFrame, show_peaks: bool=True,
-            peak_prominence: float=0.02,
-            peak_abs_height: float=0.02,
-            peak_rel_height: float=0.5):
+
+def plot_3D(df: pd.DataFrame, show_peaks: bool = True,
+            peak_prominence: float = 0.02,
+            peak_abs_height: float = 0.02,
+            peak_rel_height: float = 0.5):
     """
     Plot data in 3D with optional peak visualization.
 
@@ -138,16 +166,53 @@ def plot_3D(df: pd.DataFrame, show_peaks: bool=True,
             if len(widths[0]) > 0:
                 for i in range(widths[0].shape[0]):
                     fig.add_scatter3d(x=[widths[2][i], widths[3][i]],
-                                      y=[cell_id,cell_id],
-                                      z=[widths[1][i],widths[1][i]],
+                                      y=[cell_id, cell_id],
+                                      z=[widths[1][i], widths[1][i]],
                                       mode="lines",
                                       line=dict(color='black', width=2),
                                       legendgroup=cell_id,
                                       showlegend=False
-                    )
+                                      )
 
     fig.show()
 
+
+def get_peak_distributions(df: pd.DataFrame,
+                           peak_prominence: float = 0.02,
+                           peak_abs_height: float = 0.02,
+                           peak_rel_height: float = 0.5
+                           ) -> Tuple[NDArray, NDArray, NDArray, NDArray]:
+    """
+    Calculate distributions of peak properties for each cell in the DataFrame.
+
+    :param df: DataFrame containing 'cell_id' and 'processed' columns.
+    :type df: pd.DataFrame
+    :param peak_prominence: Minimum prominence of peaks, defaults to 0.02.
+    :type peak_prominence: float, optional
+    :param peak_abs_height: Absolute minimum height of peaks, defaults to 0.02.
+    :type peak_abs_height: float, optional
+    :param peak_rel_height: Relative minimum height of peaks, defaults to 0.5.
+    :type peak_rel_height: float, optional
+
+    :return: Tuple of arrays containing height, width, count, and frequency distributions of peaks.
+    :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+    """
+
+    height_dist = []
+    width_dist = []
+    count_dist = []
+    freq_dist = []
+    duration = len(pd.unique(df['frame']))
+    for cell_id, group_df in df.groupby('cell_id'):
+        data_arr = group_df['processed'].to_numpy()
+        peaks, peak_info = find_peaks(data_arr, height=peak_abs_height, prominence=peak_prominence)
+        widths = peak_widths(data_arr, peaks, rel_height=peak_rel_height)
+        height_dist.extend(peak_info["peak_heights"])
+        width_dist.extend(widths[0])
+        count_dist.append(len(peaks))
+        freq_dist.append(len(peaks)/duration)
+
+    return np.array(height_dist), np.array(width_dist), np.array(count_dist), np.array(freq_dist)
 
 
 def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "top10",
@@ -192,7 +257,25 @@ def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "t
 
     return df
 
+
+def combine_dataframes(dfs: List[pd.DataFrame]) -> pd.DataFrame:
+    """
+    Combine multiple dataframes vertically, ensuring unique cell IDs while preserving the original order.
+
+    :param dfs: A list of pandas DataFrames to be concatenated.
+    :type dfs: List[pd.DataFrame]
+
+    :return: A combined DataFrame with unique cell IDs and an additional column for original cell IDs.
+    :rtype: pd.DataFrame
+    """
+    combined_df = pd.concat(dfs)
+    combined_df.reset_index(drop=True, inplace=True)
+    combined_df['original_cell_id'] = combined_df['cell_id']
+    combined_df['cell_id'] = range(1, len(combined_df) + 1)
+    return combined_df
+
+
 if __name__ == "__main__":
     df = process_raw_reads(r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001.csv")
-    #plot_image(df)
+    # plot_image(df)
     plot_3D(df, show_peaks=True)
