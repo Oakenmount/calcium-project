@@ -1,0 +1,11 @@
+matplotlib
+nd2
+nptyping
+numpy
+pandas
+plotly
+scipy
+seaborn
+scikit-image
+tqdm
+matplotlib
