@@ -84,8 +84,7 @@ def plot_2D(df: pd.DataFrame, show_peaks: bool = True,
     :rtype: None
     """
     for cell_id, group_df in df.groupby('cell_id'):
-        data = group_df['processed'] if show_peaks else group_df['mean']
-        plt.plot(group_df['frame'], data, label=f'Cell {cell_id}')
+        plt.plot(group_df['frame'], group_df['processed'], label=f'Cell {cell_id}')
         if show_peaks:
             data_arr = group_df['processed'].to_numpy()
             peaks, peak_info = find_peaks(data_arr, height=peak_abs_height, prominence=peak_prominence)
