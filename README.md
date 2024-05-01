@@ -14,9 +14,10 @@ By default, the program will look for ``myvideo.json`` when processing a video f
 Here's is an example of a config file, where the splits occur at frame 150 and 250.
 ```json
 {
-  "Specimen": "Astrocyte Control cell",
+  "Name": "Astrocyte CTRL TG GPN",
+  "Specimen": "AstCtrl137",
   "Date": "01-05-2024",
-  "Description": "Astrocyte exposed to TG and GPN",
+  "Description": "Astrocyte control cell exposed to TG and GPN",
   "Splits": [
     150,
     250
