@@ -1,3 +1,4 @@
+from glob import glob
 from typing import List
 
 import nd2
@@ -19,9 +20,11 @@ def get_mask_centroids(mask: NDArray) -> List:
     return coords
 
 
-def process_video(vid_path: str, out_path: str, mask_path: str = None, exists_ok: bool = False):
+def process_video(vid_path: str, out_path: str = None, mask_path: str = None, exists_ok: bool = False):
     if mask_path is None:
         mask_path = vid_path[:-4] + "_cp_masks.png"
+    if out_path is None:
+        out_path = vid_path[:-4] + ".csv"
 
     # validate args
     if not exists_ok and os.path.exists(out_path):
@@ -78,8 +81,6 @@ def process_video(vid_path: str, out_path: str, mask_path: str = None, exists_ok
 
 
 if __name__ == "__main__":
-    #process_video("data/raw/exp_2/GPN1/GPN1_001.nd2", "data/processed/exp_2/GPN1/GPN1_001.csv", exists_ok=True)
-    process_video(r"C:\Users\LAB-ADMIN\Desktop\Control1\Control1_001.nd2",
-                  r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001.csv",
-                  mask_path=r"C:\Users\LAB-ADMIN\Desktop\Control1\Fire LUT\Control1_001_cp_masks.png",
-                  exists_ok=True)
+    for fpath in glob("data/*/*.nd2", recursive=True):
+        print(fpath)
+        process_video(fpath)
