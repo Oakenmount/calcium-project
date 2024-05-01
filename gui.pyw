@@ -2,12 +2,15 @@ import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from postprocess import process_raw_reads, combine_dataframes, plot_2D, plot_3D, plot_distributions
+from ttkbootstrap import Style
 
 
 class ProcessGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Data Processor")
+        style = Style(theme="darkly")  # You can change the theme to any available theme
+
         self.loaded_files = []
         self.processed_df = None
         self.processed_dfs = []
@@ -28,8 +31,7 @@ class ProcessGUI:
         # Widgets
         self.quantity_label = ttk.Label(root, text="Quantity:")
         self.quantity_label.pack()
-        self.quantity_menu = ttk.OptionMenu(root, self.quantity_var, "mean", "mean", "max", "top10",
-                                            command=self.process_data)
+        self.quantity_menu = ttk.OptionMenu(root, self.quantity_var, "mean", "max", "top10", command=self.process_data)
         self.quantity_menu.pack()
 
         # Buttons
