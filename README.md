@@ -1,4 +1,4 @@
-# Wüstner Lab Calcium analysis tool
+# Wüstner Lab calcium analysis tool
 
 ## Installation
 The tool requires a few basic Python packages that can be installed with pip or conda.  
