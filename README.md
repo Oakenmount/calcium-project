@@ -25,6 +25,22 @@ Here's is an example of a config file, where the splits occur at frame 150 and 2
 }
 ```
 
+## Suggested file structure
+```
+📁experiment_1
+├── 📁condition_a
+│   ├── 🎞️vid_001.nd2
+│   ├── 📄vid_001.json
+│   ├── 🖊️vid_001_cp_masks.png
+│   ├── 🎞️vid_002.nd2
+│   ├── 📄vid_002.json
+│   └── 🖊️vid_002_cp_masks.png
+└── 📁condition_b
+    ├── 🎞️vid_001.nd2
+    ├── 📄vid_001.json
+    └── 🖊️vid_001_cp_masks.png
+```
+
 ## Todo:
 - metadata file processing
 - Preview of sum/max projection
