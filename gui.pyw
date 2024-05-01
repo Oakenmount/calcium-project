@@ -1,6 +1,7 @@
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from postprocess import process_raw_reads, combine_dataframes, plot_2D, plot_3D
+from postprocess import process_raw_reads, combine_dataframes, plot_2D, plot_3D, plot_distributions
 
 
 class ProcessGUI:
@@ -9,6 +10,7 @@ class ProcessGUI:
         self.root.title("Data Processor")
         self.loaded_files = []
         self.processed_df = None
+        self.processed_dfs = []
 
         self.loaded_file_label = tk.Label(root, text="No files loaded", fg="red")
         self.loaded_file_label.pack()
@@ -75,7 +77,8 @@ class ProcessGUI:
         self.peak_rel_height_entry = tk.Entry(root, textvariable=self.peak_rel_height_var)
         self.peak_rel_height_entry.pack()
 
-        self.save_button = tk.Button(root, text="Save Processed Data", command=self.save_processed_data, state='disabled')
+        self.save_button = tk.Button(root, text="Save Processed Data", command=self.save_processed_data,
+                                     state='disabled')
         self.save_button.pack()
 
         self.plot_2d_button = tk.Button(root, text="Plot 2D", command=self.plot_2d, state='disabled')
@@ -83,6 +86,9 @@ class ProcessGUI:
 
         self.plot_3d_button = tk.Button(root, text="Plot 3D", command=self.plot_3d, state='disabled')
         self.plot_3d_button.pack()
+
+        self.plot_hist_button = tk.Button(root, text="Plot histograms", command=self.plot_histograms, state='disabled')
+        self.plot_hist_button.pack()
 
     def load_and_process_data(self):
         files = filedialog.askopenfilenames(filetypes=[("CSV files", "*.csv")])
@@ -112,6 +118,7 @@ class ProcessGUI:
     def process_data(self, new_val=None):
         if self.loaded_files:
             dfs = []
+            self.processed_dfs = []
             for file in self.loaded_files:
                 df = process_raw_reads(file,
                                        quantity=self.quantity_var.get(),
@@ -120,10 +127,12 @@ class ProcessGUI:
                                        smoothing=self.smoothing_var.get(),
                                        window_size=self.window_size_var.get())
                 dfs.append(df)
+                self.processed_dfs.append(df)
             self.processed_df = combine_dataframes(dfs)
             self.save_button.config(state='normal')
             self.plot_2d_button.config(state='normal')
             self.plot_3d_button.config(state='normal')
+            self.plot_hist_button.config(state='normal')
 
     def save_processed_data(self):
         if self.processed_df is not None:
@@ -147,6 +156,16 @@ class ProcessGUI:
     def plot_3d(self):
         if self.processed_df is not None:
             plot_3D(self.processed_df)
+        else:
+            messagebox.showerror("Error", "No processed data.")
+
+    def plot_histograms(self):
+        if self.processed_df is not None:
+            plot_distributions(self.processed_dfs, [os.path.basename(f)[:-4] for f in self.loaded_files],
+                               peak_prominence=self.peak_prominence_var.get(),
+                               peak_abs_height=self.peak_abs_height_var.get(),
+                               peak_rel_height=self.peak_rel_height_var.get()
+                               )
         else:
             messagebox.showerror("Error", "No processed data.")
 

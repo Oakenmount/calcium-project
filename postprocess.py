@@ -210,9 +210,49 @@ def get_peak_distributions(df: pd.DataFrame,
         height_dist.extend(peak_info["peak_heights"])
         width_dist.extend(widths[0])
         count_dist.append(len(peaks))
-        freq_dist.append(len(peaks)/duration)
+        freq_dist.append(len(peaks) / duration)
 
     return np.array(height_dist), np.array(width_dist), np.array(count_dist), np.array(freq_dist)
+
+
+def plot_distributions(dataframes: List[pd.DataFrame], labels: List[str],
+                       peak_prominence: float = 0.02,
+                       peak_abs_height: float = 0.02,
+                       peak_rel_height: float = 0.5
+                       ):
+    """
+    Plot boxplots with scatter points for peak distributions.
+
+    :param dataframes: List of DataFrames containing peak distributions.
+    :type dataframes: List[pd.DataFrame]
+    :param labels: List of labels for each DataFrame.
+    :type labels: List[str]
+    """
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+    axes = axes.flatten()
+
+    distributions = [get_peak_distributions(df,
+                                            peak_prominence=peak_prominence,
+                                            peak_abs_height=peak_abs_height,
+                                            peak_rel_height=peak_rel_height
+                                            ) for df in dataframes]
+    dist_names = ['Height', 'Width', 'Count', 'Frequency']
+
+    for i, dist_name in enumerate(dist_names):
+        data = []
+        origins = []
+        for j, df_name in enumerate(labels):
+            data_entry = distributions[j][i]
+            data.extend(data_entry)
+            origins.extend([df_name] * len(data_entry))
+        df = pd.DataFrame({dist_name: data, 'experiment': origins})
+        sns.violinplot(data=df, x='experiment', y=dist_name, ax=axes[i])
+        sns.stripplot(data=df, x='experiment', y=dist_name, ax=axes[i], color="black", alpha=0.25)
+        axes[i].set_xlabel("")
+    fig.suptitle("Spike distributions")
+    plt.tight_layout()
+    plt.show()
 
 
 def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "top10",
@@ -282,5 +322,6 @@ def combine_dataframes(dfs: List[pd.DataFrame]) -> pd.DataFrame:
 
 if __name__ == "__main__":
     df = process_raw_reads(r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001.csv")
-    # plot_image(df)
-    plot_3D(df, show_peaks=True)
+    df2 = process_raw_reads(r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001_processed.csv",
+                            bg_path=r"C:\Users\LAB-ADMIN\Desktop\Control1\processed\Control1_001_bg.csv")
+    plot_distributions([df, df2], ["GPN", "Control"])
