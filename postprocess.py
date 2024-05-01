@@ -245,9 +245,9 @@ def process_raw_reads(fpath: str, quantity: Literal["mean", "max", "top10"] = "t
 
     for cell_id, group_df in df.groupby('cell_id'):
         # Subtract values with background
-        data = group_df[quantity].to_numpy()
+        data = group_df[quantity].to_numpy().astype('float64')
         if subtract_bg:
-            data -= df_bg['mean'].to_numpy()
+            data -= df_bg['mean'].to_numpy().astype('float64')
         lower = get_lower_rolling_mean(data, window_size=window_size)
         normed = np.clip((data - lower) / lower, a_min=0, a_max=None)  # Can go below zero at boundaries.
         smoothed = smooth_timeseries(normed, smoothing)
@@ -268,11 +268,16 @@ def combine_dataframes(dfs: List[pd.DataFrame]) -> pd.DataFrame:
     :return: A combined DataFrame with unique cell IDs and an additional column for original cell IDs.
     :rtype: pd.DataFrame
     """
-    combined_df = pd.concat(dfs)
-    combined_df.reset_index(drop=True, inplace=True)
-    combined_df['original_cell_id'] = combined_df['cell_id']
-    combined_df['cell_id'] = range(1, len(combined_df) + 1)
-    return combined_df
+    combined = None
+    for df in dfs:
+        if combined is None:
+            combined = df
+        else:
+            df['original_cell_id'] = df['cell_id']
+            df['cell_id'] += combined['cell_id'].max() + 1
+            combined = pd.concat([combined, df])
+    combined.reset_index(drop=True, inplace=True)
+    return combined
 
 
 if __name__ == "__main__":
