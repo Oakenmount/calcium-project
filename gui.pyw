@@ -31,7 +31,8 @@ class ProcessGUI:
         # Widgets
         self.quantity_label = ttk.Label(root, text="Quantity:")
         self.quantity_label.pack()
-        self.quantity_menu = ttk.OptionMenu(root, self.quantity_var, "mean", "max", "top10", command=self.process_data)
+        self.quantity_menu = ttk.OptionMenu(root, self.quantity_var, "mean", "mean", "max", "top10",
+                                            command=self.process_data)
         self.quantity_menu.pack()
 
         # Buttons
@@ -41,13 +42,6 @@ class ProcessGUI:
         self.file_entry.pack()
         self.file_button = ttk.Button(root, text="Browse", command=self.load_and_process_data)
         self.file_button.pack()
-
-        self.bg_label = ttk.Label(root, text="Background file path (optional):")
-        self.bg_label.pack()
-        self.bg_entry = ttk.Entry(root, state='readonly', textvariable=tk.StringVar(root, "None"))
-        self.bg_entry.pack()
-        self.bg_button = ttk.Button(root, text="Browse", command=self.browse_bg_file)
-        self.bg_button.pack()
 
         self.subtract_bg_check = ttk.Checkbutton(root, text="Subtract Background", variable=self.subtract_bg_var)
         self.subtract_bg_check.pack()
@@ -105,19 +99,6 @@ class ProcessGUI:
         else:
             self.loaded_file_label.config(text="No files loaded", foreground="red")
 
-    def browse_bg_file(self):
-        bg_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
-        if bg_path:
-            self.bg_entry.config(state='normal')
-            self.bg_entry.delete(0, tk.END)
-            self.bg_entry.insert(0, bg_path)
-            self.bg_entry.config(state='readonly')
-        else:
-            self.bg_entry.config(state='normal')
-            self.bg_entry.delete(0, tk.END)
-            self.bg_entry.insert(0, "None")
-            self.bg_entry.config(state='readonly')
-
     def process_data(self, new_val=None):
         if self.loaded_files:
             dfs = []
@@ -125,7 +106,6 @@ class ProcessGUI:
             for file in self.loaded_files:
                 df = process_raw_reads(file,
                                        quantity=self.quantity_var.get(),
-                                       bg_path=None if self.bg_entry.get() == "None" else self.bg_entry.get(),
                                        subtract_bg=self.subtract_bg_var.get(),
                                        smoothing=self.smoothing_var.get(),
                                        window_size=self.window_size_var.get())
