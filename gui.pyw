@@ -47,12 +47,15 @@ class ProcessGUI(ttk.Frame):
         self.peak_frame = ttk.LabelFrame(col3, text='Peak detection')
         self.peak_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
 
-        # New Label for Loaded Data
-        self.loaded_data_frame = ttk.LabelFrame(col1, text="Loaded Data:")
-        self.loaded_data_frame.pack()
+        self.file_label = ttk.Label(col1, text="Load CSV files:")
+        self.file_label.pack(fill=X)
 
-        self.file_button = ttk.Button(self.loaded_data_frame, text="Browse", command=self.load_and_process_data)
-        self.file_button.pack(in_=self.loaded_data_frame)
+        self.file_button = ttk.Button(col1, text="Browse", command=self.load_and_process_data)
+        self.file_button.pack(fill=X)
+
+        # New Label for Loaded Data
+        self.loaded_data_frame = ttk.LabelFrame(col1, text="Loaded Dataframes:")
+        self.loaded_data_frame.pack()
 
         # Checkbox Variables
         self.checkbox_vars = []
@@ -118,13 +121,13 @@ class ProcessGUI(ttk.Frame):
                                       state='disabled')
         self.save_button.pack(in_=self.col2, fill=X)
 
-        # Plot 2D Button
-        self.plot_2d_button = ttk.Button(self.col2, text="Plot 2D", command=self.plot_2d, state='disabled')
-        self.plot_2d_button.pack(in_=self.col2, fill=X)
-
         # Plot matrix
         self.plot_mat_button = ttk.Button(self.col2, text="Plot Matrix", command=self.plot_mat, state='disabled')
         self.plot_mat_button.pack(in_=self.col2, fill=X)
+
+        # Plot 2D Button
+        self.plot_2d_button = ttk.Button(self.col2, text="Plot 2D", command=self.plot_2d, state='disabled')
+        self.plot_2d_button.pack(in_=self.col2, fill=X)
 
         # Plot 3D Button
         self.plot_3d_button = ttk.Button(self.col2, text="Plot 3D", command=self.plot_3d, state='disabled')
@@ -145,7 +148,7 @@ class ProcessGUI(ttk.Frame):
                         var = tk.BooleanVar(self.loaded_data_frame, value=True)
                         checkbox = ttk.Checkbutton(self.loaded_data_frame, text=os.path.basename(file), variable=var,
                                                    command=self.on_actives_changed)
-                        checkbox.pack(expand=True)
+                        checkbox.pack(fill=X)
                         self.checkbox_vars.append((file, var))
 
                         df = process_raw_reads(file,
