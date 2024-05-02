@@ -1,5 +1,7 @@
 # Wüstner Lab calcium analysis tool
 
+![Screenshot](https://i.imgur.com/4scIbgo.png)
+
 ## Installation
 The tool requires a few basic Python packages that can be installed with pip or conda.  
 From this directory, you can install all the required packages specified in requirements.txt using the command below.  
