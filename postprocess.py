@@ -87,8 +87,10 @@ def plot_2D(df: pd.DataFrame, show_peaks: bool = True,
     """
     if not show_raw:
         quantity = "processed"
+        ylab = "∆F/F"
     else:
         show_peaks = False
+        ylab = quantity + " pixel intensity"
 
     for cell_id, group_df in df.groupby('cell_id'):
         plt.plot(group_df['frame'], group_df[quantity], label=f'Cell {cell_id}')
@@ -100,7 +102,7 @@ def plot_2D(df: pd.DataFrame, show_peaks: bool = True,
             plt.hlines(*widths[1:], color="grey", linestyle="--", alpha=0.5)
 
     plt.xlabel('Frame')
-    plt.ylabel('∆F/F')
+    plt.ylabel(ylab)
     plt.tight_layout()
     plt.show()
 
@@ -118,6 +120,9 @@ def plot_image(df: pd.DataFrame, show_raw: bool = False,
     """
     if not show_raw:
         quantity = "processed"
+        ylab = "∆F/F"
+    else:
+        ylab = quantity + " pixel intensity"
 
     # Get unique cell_ids and frames
     cell_ids = df['cell_id'].unique()
@@ -136,7 +141,7 @@ def plot_image(df: pd.DataFrame, show_raw: bool = False,
     plt.xlabel('Frame')
     plt.ylabel('Cell ID')
     plt.title('Signal Intensity')
-    plt.colorbar(label='∆F/F')
+    plt.colorbar(label=ylab)
     plt.tight_layout()
     plt.show()
 
@@ -170,6 +175,9 @@ def plot_3D(df: pd.DataFrame, show_peaks: bool = True,
 
     fig = px.line_3d(df, x='frame', y='cell_id', z=quantity, color='cell_id',
                      labels={'frame': 'Frame',
+                             'top10': 'top 10% pixel intensity',
+                             'mean': 'mean pixel intensity',
+                             'max': 'max pixel intensity',
                              'processed': '∆F/F',
                              'cell_id': 'Cell'
                              })

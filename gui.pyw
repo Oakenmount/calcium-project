@@ -151,7 +151,8 @@ class ProcessGUI(ttk.Frame):
                 for file in files:
                     if not file in self.loaded_files:
                         var = tk.BooleanVar(self.loaded_data_frame, value=True)
-                        checkbox = ttk.Checkbutton(self.loaded_data_frame, text=os.path.basename(file), variable=var,
+                        checkbox = ttk.Checkbutton(self.loaded_data_frame, text=os.path.basename(file)[:-4],
+                                                   variable=var,
                                                    command=self.on_actives_changed)
                         checkbox.pack(fill=X)
                         self.checkbox_vars.append((file, var))
