@@ -65,7 +65,9 @@ def get_lower_rolling_mean(data: NDArray, window_size: int = 11, k_percent: floa
 def plot_2D(df: pd.DataFrame, show_peaks: bool = True,
             peak_prominence: float = 0.02,
             peak_abs_height: float = 0.02,
-            peak_rel_height: float = 0.5):
+            peak_rel_height: float = 0.5,
+            show_raw: bool = False,
+            quantity: Literal["mean", "max", "top10"] = "mean"):
     """
     Show a line plot of ∆F/F per frame for each cell.
 
@@ -83,8 +85,13 @@ def plot_2D(df: pd.DataFrame, show_peaks: bool = True,
     :return: None
     :rtype: None
     """
+    if not show_raw:
+        quantity = "processed"
+    else:
+        show_peaks = False
+
     for cell_id, group_df in df.groupby('cell_id'):
-        plt.plot(group_df['frame'], group_df['processed'], label=f'Cell {cell_id}')
+        plt.plot(group_df['frame'], group_df[quantity], label=f'Cell {cell_id}')
         if show_peaks:
             data_arr = group_df['processed'].to_numpy()
             peaks, peak_info = find_peaks(data_arr, height=peak_abs_height, prominence=peak_prominence)
@@ -98,7 +105,8 @@ def plot_2D(df: pd.DataFrame, show_peaks: bool = True,
     plt.show()
 
 
-def plot_image(df: pd.DataFrame):
+def plot_image(df: pd.DataFrame, show_raw: bool = False,
+               quantity: Literal["mean", "max", "top10"] = "mean"):
     """
     Plot an image representing ∆F/F for each cell over frames.
 
@@ -108,6 +116,9 @@ def plot_image(df: pd.DataFrame):
     :return: None
     :rtype: None
     """
+    if not show_raw:
+        quantity = "processed"
+
     # Get unique cell_ids and frames
     cell_ids = df['cell_id'].unique()
     frames = df['frame'].unique()
@@ -118,7 +129,7 @@ def plot_image(df: pd.DataFrame):
     for index, row in df.iterrows():
         cell_index = np.where(cell_ids == row['cell_id'])[0][0]
         frame_index = np.where(frames == row['frame'])[0][0]
-        image[cell_index, frame_index] = row['processed']
+        image[cell_index, frame_index] = row[quantity]
 
     # Plot the image
     plt.imshow(image, aspect='auto', cmap='viridis', origin='lower')
@@ -133,7 +144,9 @@ def plot_image(df: pd.DataFrame):
 def plot_3D(df: pd.DataFrame, show_peaks: bool = True,
             peak_prominence: float = 0.02,
             peak_abs_height: float = 0.02,
-            peak_rel_height: float = 0.5):
+            peak_rel_height: float = 0.5,
+            show_raw: bool = False,
+            quantity: Literal["mean", "max", "top10"] = "mean"):
     """
     Plot data in 3D with optional peak visualization.
 
@@ -150,7 +163,12 @@ def plot_3D(df: pd.DataFrame, show_peaks: bool = True,
     :return: None
     :rtype: None
     """
-    fig = px.line_3d(df, x='frame', y='cell_id', z='processed', color='cell_id',
+    if not show_raw:
+        quantity = "processed"
+    else:
+        show_peaks = False
+
+    fig = px.line_3d(df, x='frame', y='cell_id', z=quantity, color='cell_id',
                      labels={'frame': 'Frame',
                              'processed': '∆F/F',
                              'cell_id': 'Cell'
@@ -158,7 +176,7 @@ def plot_3D(df: pd.DataFrame, show_peaks: bool = True,
 
     if show_peaks:
         for cell_id, group_df in df.groupby('cell_id'):
-            data_arr = group_df['processed'].to_numpy()
+            data_arr = group_df[quantity].to_numpy()
             peaks, peak_info = find_peaks(data_arr, height=peak_abs_height, prominence=peak_prominence)
             widths = peak_widths(data_arr, peaks, rel_height=peak_rel_height)
             fig.add_scatter3d(x=peaks, y=[cell_id] * len(peaks), z=data_arr[peaks],

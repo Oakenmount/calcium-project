@@ -72,7 +72,12 @@ class ProcessGUI(ttk.Frame):
         self.subtract_bg_var = tk.BooleanVar(root, True)
         self.subtract_bg_check = ttk.Checkbutton(self.processing_frame, text="Subtract Background",
                                                  variable=self.subtract_bg_var, command=self.on_proc_changed)
-        self.subtract_bg_check.pack()
+        self.subtract_bg_check.pack(fill=X)
+
+        self.show_raw_var = tk.BooleanVar(root, False)
+        self.show_raw_check = ttk.Checkbutton(self.processing_frame, text="Show raw data",
+                                              variable=self.show_raw_var)
+        self.show_raw_check.pack(fill=X)
 
         # Smoothing Window Size Entry
         self.smoothing_var = tk.IntVar(root, 3)
@@ -93,7 +98,7 @@ class ProcessGUI(ttk.Frame):
         # Show Peaks Checkbutton
         self.show_peaks_var = tk.BooleanVar(root, True)
         self.show_peaks_check = ttk.Checkbutton(self.peak_frame, text="Show Peaks", variable=self.show_peaks_var)
-        self.show_peaks_check.pack()
+        self.show_peaks_check.pack(fill=X)
 
         # Peak Prominence Entry
         self.peak_prominence_var = tk.DoubleVar(root, 0.02)
@@ -234,14 +239,18 @@ class ProcessGUI(ttk.Frame):
                     show_peaks=self.show_peaks_var.get(),
                     peak_prominence=self.peak_prominence_var.get(),
                     peak_abs_height=self.peak_abs_height_var.get(),
-                    peak_rel_height=self.peak_rel_height_var.get())
+                    peak_rel_height=self.peak_rel_height_var.get(),
+                    show_raw=self.show_raw_var.get(),
+                    quantity=self.quantity_var.get())
         else:
             messagebox.showerror("Error", "No processed data.")
 
     def plot_mat(self):
         active_df = self.get_active_data()
         if active_df is not None:
-            plot_image(active_df)
+            plot_image(active_df,
+                       show_raw=self.show_raw_var.get(),
+                       quantity=self.quantity_var.get())
         else:
             messagebox.showerror("Error", "No processed data.")
 
@@ -252,7 +261,9 @@ class ProcessGUI(ttk.Frame):
                     show_peaks=self.show_peaks_var.get(),
                     peak_prominence=self.peak_prominence_var.get(),
                     peak_abs_height=self.peak_abs_height_var.get(),
-                    peak_rel_height=self.peak_rel_height_var.get())
+                    peak_rel_height=self.peak_rel_height_var.get(),
+                    show_raw=self.show_raw_var.get(),
+                    quantity=self.quantity_var.get())
         else:
             messagebox.showerror("Error", "No processed data.")
 
