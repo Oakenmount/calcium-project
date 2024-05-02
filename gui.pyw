@@ -1,7 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from postprocess import process_raw_reads, combine_dataframes, plot_2D, plot_3D, plot_distributions
+from postprocess import process_raw_reads, combine_dataframes, plot_2D, plot_3D, plot_distributions, plot_image
 from ttkbootstrap import Style
 
 
@@ -105,6 +105,10 @@ class ProcessGUI:
         self.plot_2d_button = ttk.Button(self.left_frame, text="Plot 2D", command=self.plot_2d, state='disabled')
         self.plot_2d_button.pack(in_=self.left_frame)
 
+        # Plot matrix
+        self.plot_mat_button = ttk.Button(self.left_frame, text="Plot Matrix", command=self.plot_mat, state='disabled')
+        self.plot_mat_button.pack(in_=self.left_frame)
+
         # Plot 3D Button
         self.plot_3d_button = ttk.Button(self.left_frame, text="Plot 3D", command=self.plot_3d, state='disabled')
         self.plot_3d_button.pack(in_=self.left_frame)
@@ -141,6 +145,7 @@ class ProcessGUI:
             self.processed_df = combine_dataframes(dfs)
             self.save_button.config(state='normal')
             self.plot_2d_button.config(state='normal')
+            self.plot_mat_button.config(state='normal')
             self.plot_3d_button.config(state='normal')
             self.plot_hist_button.config(state='normal')
 
@@ -163,9 +168,19 @@ class ProcessGUI:
         else:
             messagebox.showerror("Error", "No processed data.")
 
+    def plot_mat(self):
+        if self.processed_df is not None:
+            plot_image(self.processed_df)
+        else:
+            messagebox.showerror("Error", "No processed data.")
+
     def plot_3d(self):
         if self.processed_df is not None:
-            plot_3D(self.processed_df)
+            plot_3D(self.processed_df,
+                    show_peaks=self.show_peaks_var.get(),
+                    peak_prominence=self.peak_prominence_var.get(),
+                    peak_abs_height=self.peak_abs_height_var.get(),
+                    peak_rel_height=self.peak_rel_height_var.get())
         else:
             messagebox.showerror("Error", "No processed data.")
 
