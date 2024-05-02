@@ -8,84 +8,111 @@ from ttkbootstrap import Style
 class ProcessGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Data Processor")
-        style = Style(theme="darkly")  # You can change the theme to any available theme
+        self.root.title("DWLab calcium analysis tool")
+        style = Style(theme="litera")  # You can change the theme to any available theme
 
         self.loaded_files = []
         self.processed_df = None
         self.processed_dfs = []
 
-        self.loaded_file_label = ttk.Label(root, text="No files loaded", foreground="red")
+        # Left Frame for buttons
+        self.left_frame = ttk.Frame(root)
+        self.left_frame.pack(side=tk.LEFT, padx=10, pady=10)
+
+        # Right Frame for processing and peak parameters
+        self.right_frame = ttk.Frame(root)
+        self.right_frame.pack(side=tk.RIGHT, padx=10, pady=10)
+
+        # Label Frames
+        self.processing_frame = ttk.LabelFrame(self.right_frame, text='Data processing')
+        self.processing_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+        self.peak_frame = ttk.LabelFrame(self.right_frame, text='Peak detection')
+        self.peak_frame.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+
+        # Loaded Files Label
+        self.loaded_file_label = ttk.Label(self.left_frame, text="No files loaded", foreground="red")
         self.loaded_file_label.pack()
 
-        # Parameters
+        # Quantity Menu
         self.quantity_var = tk.StringVar(root, "top10")
-        self.subtract_bg_var = tk.BooleanVar(root, True)
-        self.smoothing_var = tk.IntVar(root, 3)
-        self.window_size_var = tk.IntVar(root, 11)
-        self.show_peaks_var = tk.BooleanVar(root, True)
-        self.peak_prominence_var = tk.DoubleVar(root, 0.02)
-        self.peak_abs_height_var = tk.DoubleVar(root, 0.02)
-        self.peak_rel_height_var = tk.DoubleVar(root, 0.5)
-
-        # Widgets
-        self.quantity_label = ttk.Label(root, text="Quantity:")
-        self.quantity_label.pack()
-        self.quantity_menu = ttk.OptionMenu(root, self.quantity_var, "mean", "mean", "max", "top10",
+        self.quantity_label = ttk.Label(self.processing_frame, text="Quantity:")
+        self.quantity_label.pack(in_=self.processing_frame)
+        self.quantity_menu = ttk.OptionMenu(self.processing_frame, self.quantity_var, "mean", "mean", "max", "top10",
                                             command=self.process_data)
-        self.quantity_menu.pack()
+        self.quantity_menu.pack(in_=self.processing_frame)
 
-        # Buttons
-        self.file_label = ttk.Label(root, text="CSV Files:")
-        self.file_label.pack()
-        self.file_entry = ttk.Entry(root, state='readonly', textvariable=tk.StringVar(root, "None"))
-        self.file_entry.pack()
-        self.file_button = ttk.Button(root, text="Browse", command=self.load_and_process_data)
-        self.file_button.pack()
+        # File Entry and Button
+        self.file_label = ttk.Label(self.left_frame, text="CSV Files:")
+        self.file_label.pack(in_=self.left_frame)
+        self.file_entry = ttk.Entry(self.left_frame, state='readonly', textvariable=tk.StringVar(root, "None"))
+        self.file_entry.pack(in_=self.left_frame)
+        self.file_button = ttk.Button(self.left_frame, text="Browse", command=self.load_and_process_data)
+        self.file_button.pack(in_=self.left_frame)
 
-        self.subtract_bg_check = ttk.Checkbutton(root, text="Subtract Background", variable=self.subtract_bg_var)
+        # Subtract Background Checkbutton
+        self.subtract_bg_var = tk.BooleanVar(root, True)
+        self.subtract_bg_check = ttk.Checkbutton(self.processing_frame, text="Subtract Background",
+                                                 variable=self.subtract_bg_var)
         self.subtract_bg_check.pack()
 
-        self.smoothing_label = ttk.Label(root, text="Smoothing Window Size:")
+        # Smoothing Window Size Entry
+        self.smoothing_var = tk.IntVar(root, 3)
+        self.smoothing_label = ttk.Label(self.processing_frame, text="Smoothing Window Size:")
         self.smoothing_label.pack()
-        self.smoothing_entry = ttk.Entry(root, textvariable=self.smoothing_var)
+        self.smoothing_entry = ttk.Entry(self.processing_frame, textvariable=self.smoothing_var)
         self.smoothing_entry.pack()
 
-        self.window_size_label = ttk.Label(root, text="Rolling Window Size:")
+        # Rolling Window Size Entry
+        self.window_size_var = tk.IntVar(root, 11)
+        self.window_size_label = ttk.Label(self.processing_frame, text="Rolling Window Size:")
         self.window_size_label.pack()
-        self.window_size_entry = ttk.Entry(root, textvariable=self.window_size_var)
+        self.window_size_entry = ttk.Entry(self.processing_frame, textvariable=self.window_size_var)
         self.window_size_entry.pack()
 
-        self.show_peaks_check = ttk.Checkbutton(root, text="Show Peaks", variable=self.show_peaks_var)
+        # Show Peaks Checkbutton
+        self.show_peaks_var = tk.BooleanVar(root, True)
+        self.show_peaks_check = ttk.Checkbutton(self.peak_frame, text="Show Peaks", variable=self.show_peaks_var)
         self.show_peaks_check.pack()
 
-        self.peak_prominence_label = ttk.Label(root, text="Peak Prominence:")
+        # Peak Prominence Entry
+        self.peak_prominence_var = tk.DoubleVar(root, 0.02)
+        self.peak_prominence_label = ttk.Label(self.peak_frame, text="Peak Prominence:")
         self.peak_prominence_label.pack()
-        self.peak_prominence_entry = ttk.Entry(root, textvariable=self.peak_prominence_var)
+        self.peak_prominence_entry = ttk.Entry(self.peak_frame, textvariable=self.peak_prominence_var)
         self.peak_prominence_entry.pack()
 
-        self.peak_abs_height_label = ttk.Label(root, text="Peak Absolute Height:")
+        # Peak Absolute Height Entry
+        self.peak_abs_height_var = tk.DoubleVar(root, 0.02)
+        self.peak_abs_height_label = ttk.Label(self.peak_frame, text="Peak Absolute Height:")
         self.peak_abs_height_label.pack()
-        self.peak_abs_height_entry = ttk.Entry(root, textvariable=self.peak_abs_height_var)
+        self.peak_abs_height_entry = ttk.Entry(self.peak_frame, textvariable=self.peak_abs_height_var)
         self.peak_abs_height_entry.pack()
 
-        self.peak_rel_height_label = ttk.Label(root, text="Peak Relative Height:")
+        # Peak Relative Height Entry
+        self.peak_rel_height_var = tk.DoubleVar(root, 0.5)
+        self.peak_rel_height_label = ttk.Label(self.peak_frame, text="Peak Relative Height:")
         self.peak_rel_height_label.pack()
-        self.peak_rel_height_entry = ttk.Entry(root, textvariable=self.peak_rel_height_var)
+        self.peak_rel_height_entry = ttk.Entry(self.peak_frame, textvariable=self.peak_rel_height_var)
         self.peak_rel_height_entry.pack()
 
-        self.save_button = ttk.Button(root, text="Save Processed Data", command=self.save_processed_data,
+        # Save Button
+        self.save_button = ttk.Button(self.left_frame, text="Save Processed Data", command=self.save_processed_data,
                                       state='disabled')
-        self.save_button.pack()
+        self.save_button.pack(in_=self.left_frame)
 
-        self.plot_2d_button = ttk.Button(root, text="Plot 2D", command=self.plot_2d, state='disabled')
-        self.plot_2d_button.pack()
+        # Plot 2D Button
+        self.plot_2d_button = ttk.Button(self.left_frame, text="Plot 2D", command=self.plot_2d, state='disabled')
+        self.plot_2d_button.pack(in_=self.left_frame)
 
-        self.plot_3d_button = ttk.Button(root, text="Plot 3D", command=self.plot_3d, state='disabled')
-        self.plot_3d_button.pack()
+        # Plot 3D Button
+        self.plot_3d_button = ttk.Button(self.left_frame, text="Plot 3D", command=self.plot_3d, state='disabled')
+        self.plot_3d_button.pack(in_=self.left_frame)
 
-        self.plot_hist_button = ttk.Button(root, text="Plot histograms", command=self.plot_histograms, state='disabled')
-        self.plot_hist_button.pack()
+        # Plot Histograms Button
+        self.plot_hist_button = ttk.Button(self.left_frame, text="Plot histograms", command=self.plot_histograms,
+                                           state='disabled')
+        self.plot_hist_button.pack(in_=self.left_frame)
 
     def load_and_process_data(self):
         files = filedialog.askopenfilenames(filetypes=[("CSV files", "*.csv")])
