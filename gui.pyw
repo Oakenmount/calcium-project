@@ -163,11 +163,11 @@ class ProcessGUI(ttk.Frame):
         except Exception as e:
             messagebox.showerror("Error", str(e))
 
-    def on_proc_changed(self, **kwargs):
+    def on_proc_changed(self, *args):
         self.params_changed = True
         self.active_df = None
 
-    def on_actives_changed(self, **kwargs):
+    def on_actives_changed(self, *args):
         # TODO: change state based on number of active files
         self.active_df = None
         self.active_files = [file for file, var in self.checkbox_vars if var.get()]
