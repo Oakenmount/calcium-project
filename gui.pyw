@@ -1,6 +1,11 @@
 import os
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
+
+import pandas as pd
+from matplotlib import cm
+from matplotlib.colors import rgb2hex
+
 from postprocess import process_raw_reads, combine_dataframes, plot_2D, plot_3D, plot_distributions, plot_image
 from ttkbootstrap import Style
 from ttkbootstrap.constants import *
@@ -143,6 +148,9 @@ class ProcessGUI(ttk.Frame):
                                            state='disabled')
         self.plot_hist_button.pack(in_=self.col2, fill=X)
 
+        self.anim_button = ttk.Button(self.col2, text="Show animation", command=self.open_animation, state='disabled')
+        self.anim_button.pack(fill=X)
+
     def load_and_process_data(self):
         files = filedialog.askopenfilenames(filetypes=[("CSV files", "*.csv")])
         try:
@@ -183,12 +191,15 @@ class ProcessGUI(ttk.Frame):
             self.plot_mat_button.config(state='normal')
             self.plot_3d_button.config(state='normal')
             self.plot_hist_button.config(state='normal')
+            if len(self.active_files) == 1:
+                self.anim_button.config(state='normal')
         else:
             self.save_button.config(state='disabled')
             self.plot_2d_button.config(state='disabled')
             self.plot_mat_button.config(state='disabled')
             self.plot_3d_button.config(state='disabled')
             self.plot_hist_button.config(state='disabled')
+            self.anim_button.config(state='disabled')
 
     def get_active_data(self, combined: bool = True):
         # If params have changed, update data
@@ -278,6 +289,57 @@ class ProcessGUI(ttk.Frame):
                                )
         else:
             messagebox.showerror("Error", "No processed data.")
+
+    def open_animation(self):
+        if len(self.active_files) == 1:
+            anim_window = tk.Toplevel(self.root)
+            anim_window.title("Animation")
+
+            temporal = pd.read_csv(self.active_files[0])
+            spatial = pd.read_csv(self.active_files[0].replace(".csv", "_positions.csv"))
+
+            merged = pd.merge(temporal, spatial, on='cell_id')
+
+            canvas_width = 700
+            canvas_height = 700
+
+            animation_canvas = tk.Canvas(anim_window, width=canvas_width, height=canvas_height)
+            animation_canvas.pack()
+            animation_canvas.configure(background="black")
+
+            label_value = ttk.Label(anim_window, text="Frame: 0")
+            label_value.pack()
+
+            def update_circles(frame):
+                animation_canvas.delete("all")  # Clear canvas
+                frame = int(round(float(frame)))
+
+                label_value.config(text=f"Frame: {frame}")
+
+                max_obs = temporal['mean'].max()
+                for index, row in merged[merged['frame'] == frame].iterrows():
+                    x, y = row['x'], row['y']
+                    data = row['mean']
+                    activation = (data / max_obs)
+                    radius = 8 + activation * 16  # Adjust size of circle based on data
+
+                    col = cm.viridis(activation)
+                    hex = rgb2hex(col)
+
+                    # Scale x and y coordinates to fit canvas
+                    scaled_x = (x / spatial['x'].max()) * canvas_width
+                    scaled_y = (y / spatial['y'].max()) * canvas_height
+
+                    # Draw circle
+                    animation_canvas.create_oval(scaled_x - radius, scaled_y - radius, scaled_x + radius,
+                                                 scaled_y + radius,
+                                                 fill=hex)
+
+            frame_slider = ttk.Scale(anim_window, from_=merged['frame'].min(), to=merged['frame'].max(),
+                                     orient="horizontal", command=update_circles)
+            frame_slider.pack()
+
+            update_circles(0)
 
 
 if __name__ == "__main__":
