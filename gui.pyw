@@ -197,7 +197,7 @@ class ProcessGUI(ttk.Frame):
         dfs = [self.processed_dfs[file] for file in self.active_files]
         if combined:
             # If we haven't changed anything, no need to combine again.
-            if self.active_df:
+            if self.active_df is not None:
                 return self.active_df
 
             df = combine_dataframes(dfs)
