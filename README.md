@@ -42,8 +42,4 @@ Here's is an example of a config file, where the splits occur at frame 150 and 2
 ```
 
 ## Todo:
-- metadata file processing
-- Preview of sum/max projection
-- Small rendering using circles which changes color and size with df/f.
-- Video processing GUI
-- clean up GUI with tkkbootstrap
+- Make use of meta-data files
