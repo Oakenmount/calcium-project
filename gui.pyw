@@ -185,14 +185,17 @@ class ProcessGUI(ttk.Frame):
         # TODO: change state based on number of active files
         self.active_df = None
         self.active_files = [file for file, var in self.checkbox_vars if var.get()]
+        if len(self.active_files) == 1:
+            self.anim_button.config(state='normal')
+        else:
+            self.anim_button.config(state='disabled')
+
         if len(self.active_files) > 0:
             self.save_button.config(state='normal')
             self.plot_2d_button.config(state='normal')
             self.plot_mat_button.config(state='normal')
             self.plot_3d_button.config(state='normal')
             self.plot_hist_button.config(state='normal')
-            if len(self.active_files) == 1:
-                self.anim_button.config(state='normal')
         else:
             self.save_button.config(state='disabled')
             self.plot_2d_button.config(state='disabled')
