@@ -15,7 +15,7 @@ class ProcessGUI(ttk.Frame):
     def __init__(self, root):
         super().__init__(root)
         self.root = root
-        self.root.title("DWLab calcium analysis tool")
+        self.root.title("DWLab peak analysis tool")
         style = Style(theme="litera")  # You can change the theme to any available theme
 
         # list of loaded files

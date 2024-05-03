@@ -1,4 +1,4 @@
-# Wüstner Lab calcium analysis tool
+# Wüstner Lab calcium peak analysis tool
 
 ![Screenshot](https://i.imgur.com/4scIbgo.png)
 
@@ -28,6 +28,8 @@ Here's is an example of a config file, where the splits occur at frame 150 and 2
 ```
 
 ## Suggested file structure
+You may use whatever structure you like, but the processing script expects the 3 files shown below to be in the same
+directory and following these naming patterns.
 ```
 📁experiment_1
 ├── 📁condition_a
