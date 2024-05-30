@@ -3,17 +3,32 @@
 ![Screenshot](https://i.imgur.com/4scIbgo.png)
 
 ## Installation
+
 The tool requires a few basic Python packages that can be installed with pip or conda.  
-From this directory, you can install all the required packages specified in requirements.txt using the command below.  
-``pip install -r requirements.txt``
+From this directory, you can install all the required packages specified in requirements.txt using the command below.
+
+```bash
+git clone https://github.com/Oakenmount/calcium-project
+cd calcium-project
+pip install -r requirements.txt
+```
 
 Then you can launch the GUI with ``python gui.pyw``
 
+To process vidoes with masks, you can use the script ``process_videos.py``. The script will look for all ``.nd2`` files
+in the ``data`` directory and process them if they have an associated mask.
+
+```bash
+python process_videos.py
+```
+
 ## Meta-data files
+
 It is advised to create a meta-data file for your videos. This is required if you want to split the video
-at specific frames. 
+at specific frames.
 By default, the program will look for ``myvideo.json`` when processing a video file called ``myvido.nd2``
 Here's is an example of a config file, where the splits occur at frame 150 and 250.
+
 ```json
 {
   "Name": "Astrocyte CTRL TG GPN",
@@ -28,8 +43,10 @@ Here's is an example of a config file, where the splits occur at frame 150 and 2
 ```
 
 ## Suggested file structure
+
 You may use whatever structure you like, but the processing script expects the 3 files shown below to be in the same
 directory and following these naming patterns.
+
 ```
 📁experiment_1
 ├── 📁condition_a
@@ -46,4 +63,5 @@ directory and following these naming patterns.
 ```
 
 ## Todo:
+
 - Make use of meta-data files
