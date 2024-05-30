@@ -81,7 +81,7 @@ def process_video(vid_path: str, out_path: str = None, mask_path: str = None, ex
 
 
 if __name__ == "__main__":
-    for fpath in glob("data/*/*.nd2", recursive=True):
+    for fpath in glob("data/**/*.nd2", recursive=True):
         try:
             print(fpath)
             process_video(fpath)
