@@ -91,5 +91,5 @@ if __name__ == "__main__":
         try:
             pbar.set_postfix_str(f"Processing {fpath}")
             process_video(fpath)
-        except FileExistsError as e:
+        except (FileExistsError, FileNotFoundError, ValueError) as e:
             print(e)
