@@ -6,6 +6,7 @@ import os
 
 import numpy as np
 import pandas as pd
+import torch
 from skimage import io
 from tqdm import tqdm
 from numpy.typing import NDArray
@@ -13,10 +14,10 @@ from numpy.typing import NDArray
 
 def get_mask_centroids(mask: NDArray) -> List:
     coords = []
-    for i in range(mask.max()):
-        cell_mask = mask == (i + 1)
+    for i in range(1, mask.max() + 1):
+        cell_mask = mask == i
         centroid = np.transpose(cell_mask.nonzero()).mean(axis=0)
-        coords.append([i, centroid[1], centroid[0]])  # column, row -> x, y
+        coords.append([i - 1, centroid[1], centroid[0]])  # column, row -> x, y
     return coords
 
 
@@ -41,7 +42,7 @@ def process_video(vid_path: str, out_path: str = None, mask_path: str = None, ex
     os.makedirs(out_dir, exist_ok=True)
 
     # load data
-    vid = nd2.imread(vid_path)
+    vid = nd2.imread(vid_path).astype(np.int32)
     mask = io.imread(mask_path)
 
     # get spacial data
@@ -50,40 +51,45 @@ def process_video(vid_path: str, out_path: str = None, mask_path: str = None, ex
     coords_df.to_csv(out_path.replace(".csv", "_positions.csv"), index=False)
 
     # calc bottom 10% bg
-    bg = (mask == 0)
+    bg = mask == 0
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    bg_t = torch.tensor(bg, dtype=torch.bool, device=device)
+    vid_t = torch.tensor(vid, dtype=torch.float32, device=device)
+
     frame_vals = []
     for i in range(len(vid)):
-        bg_vals = vid[i, bg]
-        k = int(len(bg_vals) / 10)  # k = top10
-        idx = np.argpartition(bg_vals, k)[:k]
-        frame_vals.append([i, bg_vals[idx].mean()])
+        bg_vals = torch.masked_select(vid_t[i], bg_t)
+        k = int(len(bg_vals) / 10)  # k = bottom 10%
+        top_k_vals = torch.topk(bg_vals, k, largest=False).values
+        frame_vals.append([i, top_k_vals.mean().item()])
     bg_df = pd.DataFrame(frame_vals, columns=["frame", "mean"])
     bg_df.to_csv(out_path.replace(".csv", "_bg.csv"), index=False)
 
     # get temporal data
     df_rows = []
-    for i in tqdm(range(mask.max())):
-        cell_mask = mask == (i + 1)  # 0 is bg and last num is not included in loop above
+    for i in tqdm(range(1, mask.max() + 1)):
+        cell_mask = mask == i  # 0 is bg and last num is not included in loop above
         area = cell_mask.sum()
-        vid_masked = np.zeros_like(vid)
-        vid_masked[:, cell_mask] = vid[:, cell_mask]
+        cell_mask_t = torch.tensor(cell_mask, dtype=torch.bool, device=device)
         for frame in range(len(vid)):
-            frame_masked = vid_masked[frame, cell_mask].ravel()
-            avg = frame_masked.sum() / area
-            k = int(area / 10)  # k = top10
-            idx = np.argpartition(frame_masked, -k)[-k:]
-            top10 = frame_masked[idx]
+            frame_masked = torch.masked_select(vid_t[frame], cell_mask_t)
+            avg = frame_masked.mean().item()
+            k = int(area / 10)  # k = top 10%
+            top_k_vals = torch.topk(frame_masked, k).values
+            top10 = top_k_vals.mean().item()
             # cell id, frame, mean signal, max signal, top10 signal
-            df_rows.append([i, frame, avg, frame_masked.max(), top10.mean()])
+            df_rows.append([i - 1, frame, avg, frame_masked.max().item(), top10])
 
     df = pd.DataFrame(df_rows, columns=["cell_id", "frame", "mean", "max", "top10"])
     df.to_csv(out_path, index=False)
 
 
 if __name__ == "__main__":
-    for fpath in glob("data/**/*.nd2", recursive=True):
+    pbar = tqdm(glob("data/**/*.nd2", recursive=True))
+    for fpath in pbar:
         try:
-            print(fpath)
+            pbar.set_postfix_str(f"Processing {fpath}")
             process_video(fpath)
-        except Exception as e:
+        except FileExistsError as e:
             print(e)
